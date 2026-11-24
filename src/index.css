@@ -1,0 +1,372 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root,
+  html[data-theme="whatsapp"] {
+    --font-display: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+
+    --accent: #008069;
+    --accent-hover: #016B58;
+    --accent-soft: rgba(0, 128, 105, 0.12);
+    --accent-soft-text: #006654;
+    --accent-border: rgba(0, 128, 105, 0.35);
+    --accent-glow: rgba(0, 168, 132, 0.14);
+    --wallpaper-tint: rgba(0, 128, 105, 0.06);
+  }
+
+  .dark,
+  .dark[data-theme="whatsapp"] {
+    --accent: #00A884;
+    --accent-hover: #06CF9C;
+    --accent-soft: rgba(0, 168, 132, 0.18);
+    --accent-soft-text: #5EEAD4;
+    --accent-border: rgba(0, 168, 132, 0.42);
+    --accent-glow: rgba(0, 168, 132, 0.16);
+    --wallpaper-tint: rgba(0, 168, 132, 0.08);
+  }
+
+  html[data-theme="emerald"] {
+    --accent: #047857;
+    --accent-hover: #065F46;
+    --accent-soft: rgba(4, 120, 87, 0.12);
+    --accent-soft-text: #065F46;
+    --accent-border: rgba(4, 120, 87, 0.35);
+    --accent-glow: rgba(16, 185, 129, 0.14);
+    --wallpaper-tint: rgba(4, 120, 87, 0.055);
+  }
+
+  .dark[data-theme="emerald"] {
+    --accent: #10B981;
+    --accent-hover: #34D399;
+    --accent-soft: rgba(16, 185, 129, 0.18);
+    --accent-soft-text: #6EE7B7;
+    --accent-border: rgba(16, 185, 129, 0.42);
+    --accent-glow: rgba(16, 185, 129, 0.16);
+    --wallpaper-tint: rgba(16, 185, 129, 0.08);
+  }
+
+  html[data-theme="ocean"] {
+    --accent: #0369A1;
+    --accent-hover: #075985;
+    --accent-soft: rgba(3, 105, 161, 0.12);
+    --accent-soft-text: #075985;
+    --accent-border: rgba(3, 105, 161, 0.35);
+    --accent-glow: rgba(14, 165, 233, 0.14);
+    --wallpaper-tint: rgba(3, 105, 161, 0.06);
+  }
+
+  .dark[data-theme="ocean"] {
+    --accent: #0EA5E9;
+    --accent-hover: #38BDF8;
+    --accent-soft: rgba(14, 165, 233, 0.18);
+    --accent-soft-text: #7DD3FC;
+    --accent-border: rgba(56, 189, 248, 0.42);
+    --accent-glow: rgba(14, 165, 233, 0.16);
+    --wallpaper-tint: rgba(56, 189, 248, 0.08);
+  }
+
+  html[data-theme="iris"] {
+    --accent: #6D28D9;
+    --accent-hover: #5B21B6;
+    --accent-soft: rgba(109, 40, 217, 0.12);
+    --accent-soft-text: #5B21B6;
+    --accent-border: rgba(109, 40, 217, 0.35);
+    --accent-glow: rgba(139, 92, 246, 0.14);
+    --wallpaper-tint: rgba(109, 40, 217, 0.055);
+  }
+
+  .dark[data-theme="iris"] {
+    --accent: #8B5CF6;
+    --accent-hover: #A78BFA;
+    --accent-soft: rgba(139, 92, 246, 0.2);
+    --accent-soft-text: #C4B5FD;
+    --accent-border: rgba(167, 139, 250, 0.42);
+    --accent-glow: rgba(139, 92, 246, 0.18);
+    --wallpaper-tint: rgba(167, 139, 250, 0.08);
+  }
+
+  html[data-theme="sunset"] {
+    --accent: #C2410C;
+    --accent-hover: #9A3412;
+    --accent-soft: rgba(194, 65, 12, 0.12);
+    --accent-soft-text: #9A3412;
+    --accent-border: rgba(194, 65, 12, 0.35);
+    --accent-glow: rgba(249, 115, 22, 0.14);
+    --wallpaper-tint: rgba(194, 65, 12, 0.055);
+  }
+
+  .dark[data-theme="sunset"] {
+    --accent: #EA580C;
+    --accent-hover: #F97316;
+    --accent-soft: rgba(249, 115, 22, 0.2);
+    --accent-soft-text: #FDBA74;
+    --accent-border: rgba(251, 146, 60, 0.42);
+    --accent-glow: rgba(249, 115, 22, 0.16);
+    --wallpaper-tint: rgba(251, 146, 60, 0.08);
+  }
+
+  html[data-theme="rose"] {
+    --accent: #BE123C;
+    --accent-hover: #9F1239;
+    --accent-soft: rgba(190, 18, 60, 0.12);
+    --accent-soft-text: #9F1239;
+    --accent-border: rgba(190, 18, 60, 0.35);
+    --accent-glow: rgba(244, 63, 94, 0.14);
+    --wallpaper-tint: rgba(190, 18, 60, 0.055);
+  }
+
+  .dark[data-theme="rose"] {
+    --accent: #E11D48;
+    --accent-hover: #F43F5E;
+    --accent-soft: rgba(244, 63, 94, 0.2);
+    --accent-soft-text: #FDA4AF;
+    --accent-border: rgba(251, 113, 133, 0.42);
+    --accent-glow: rgba(244, 63, 94, 0.16);
+    --wallpaper-tint: rgba(251, 113, 133, 0.08);
+  }
+
+  html {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+  }
+
+  body {
+    overscroll-behavior: none;
+    text-rendering: optimizeSpeed;
+  }
+
+  button,
+  a,
+  label,
+  [role="button"] {
+    touch-action: manipulation;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+
+  .font-mono-tabular {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .dark body,
+  .dark {
+    letter-spacing: 0.006em;
+  }
+
+  .scroll-pane {
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-gutter: stable;
+  }
+
+  .msg-row-perf {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 68px;
+  }
+
+  .gpu-layer {
+    transform: translateZ(0);
+    will-change: transform;
+  }
+
+  /* Refined thin scrollbars for workspace panes */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(120, 113, 108, 0.28);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(120, 113, 108, 0.45);
+  }
+  .dark ::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.22);
+  }
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.38);
+  }
+}
+
+/* Semantic Accent Theme Helpers */
+.bg-accent {
+  background-color: var(--accent);
+}
+.bg-accent:hover {
+  background-color: var(--accent-hover);
+}
+.bg-accent-solid {
+  background-color: var(--accent);
+}
+.bg-accent-soft {
+  background-color: var(--accent-soft);
+}
+.text-accent {
+  color: var(--accent);
+}
+.text-accent-soft {
+  color: var(--accent-soft-text);
+}
+.border-accent {
+  border-color: var(--accent-border);
+}
+
+/* Chat Wallpapers */
+.chat-wallpaper-dots {
+  background-image: radial-gradient(var(--wallpaper-tint) 1.5px, transparent 1.5px);
+  background-size: 20px 20px;
+}
+
+.chat-wallpaper-grid {
+  background-image:
+    linear-gradient(to right, var(--wallpaper-tint) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--wallpaper-tint) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.chat-wallpaper-aurora {
+  background-image:
+    radial-gradient(circle at 12% 14%, var(--accent-glow), transparent 44%),
+    radial-gradient(circle at 88% 82%, var(--wallpaper-tint), transparent 46%);
+}
+
+/* Instagram-Style Per-Chat Theme Backdrops (Flowers, Cars & Gradients) */
+.chat-theme-sunflower {
+  background-color: #FEFCE8;
+  background-image:
+    radial-gradient(circle at 14% 12%, rgba(250, 204, 21, 0.34), transparent 42%),
+    radial-gradient(circle at 86% 22%, rgba(251, 146, 60, 0.22), transparent 38%),
+    radial-gradient(circle at 82% 86%, rgba(245, 158, 11, 0.3), transparent 44%),
+    radial-gradient(circle at 18% 84%, rgba(132, 204, 22, 0.16), transparent 36%);
+}
+.dark .chat-theme-sunflower {
+  background-color: #17140C;
+  background-image:
+    radial-gradient(circle at 14% 12%, rgba(234, 179, 8, 0.24), transparent 44%),
+    radial-gradient(circle at 85% 84%, rgba(217, 119, 6, 0.22), transparent 46%),
+    radial-gradient(circle at 80% 18%, rgba(132, 204, 22, 0.12), transparent 36%);
+}
+
+.chat-theme-turbo {
+  background-color: #0B0F14;
+  background-image:
+    radial-gradient(circle at 85% 15%, rgba(6, 182, 212, 0.22), transparent 42%),
+    radial-gradient(circle at 15% 88%, rgba(16, 185, 129, 0.16), transparent 42%),
+    repeating-linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.028) 0px,
+      rgba(255, 255, 255, 0.028) 2px,
+      transparent 2px,
+      transparent 8px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.022) 0px,
+      rgba(255, 255, 255, 0.022) 2px,
+      transparent 2px,
+      transparent 8px
+    );
+}
+
+.chat-theme-ig-berry {
+  background-color: #FDF7FC;
+  background-image:
+    radial-gradient(circle at 12% 10%, rgba(168, 85, 247, 0.22), transparent 44%),
+    radial-gradient(circle at 88% 20%, rgba(236, 72, 153, 0.2), transparent 44%),
+    radial-gradient(circle at 75% 88%, rgba(249, 115, 22, 0.18), transparent 46%);
+}
+.dark .chat-theme-ig-berry {
+  background-color: #130E1A;
+  background-image:
+    radial-gradient(circle at 12% 12%, rgba(139, 92, 246, 0.24), transparent 45%),
+    radial-gradient(circle at 88% 22%, rgba(219, 39, 119, 0.22), transparent 45%),
+    radial-gradient(circle at 72% 88%, rgba(234, 88, 12, 0.16), transparent 46%);
+}
+
+.chat-theme-lavender {
+  background-color: #F6F3FF;
+  background-image:
+    radial-gradient(circle at 16% 16%, rgba(167, 139, 250, 0.28), transparent 44%),
+    radial-gradient(circle at 84% 78%, rgba(196, 181, 253, 0.34), transparent 46%),
+    radial-gradient(circle at 80% 14%, rgba(244, 114, 182, 0.14), transparent 36%);
+}
+.dark .chat-theme-lavender {
+  background-color: #12101C;
+  background-image:
+    radial-gradient(circle at 16% 16%, rgba(139, 92, 246, 0.24), transparent 44%),
+    radial-gradient(circle at 84% 78%, rgba(167, 139, 250, 0.18), transparent 46%);
+}
+
+.chat-theme-ocean-wave {
+  background-color: #F0F9FF;
+  background-image:
+    radial-gradient(circle at 14% 12%, rgba(56, 189, 248, 0.26), transparent 44%),
+    radial-gradient(circle at 86% 84%, rgba(20, 184, 166, 0.22), transparent 46%);
+}
+.dark .chat-theme-ocean-wave {
+  background-color: #09131C;
+  background-image:
+    radial-gradient(circle at 14% 14%, rgba(14, 165, 233, 0.22), transparent 44%),
+    radial-gradient(circle at 86% 84%, rgba(13, 148, 136, 0.2), transparent 46%);
+}
+
+.chat-theme-obsidian {
+  background-color: #0B0E12;
+  background-image:
+    radial-gradient(circle at 20% 12%, rgba(148, 163, 184, 0.12), transparent 44%),
+    radial-gradient(circle at 84% 86%, rgba(71, 85, 105, 0.16), transparent 46%);
+}
+
+.chat-theme-misty-forest {
+  background-color: #091510;
+  background-image:
+    radial-gradient(circle at 18% 14%, rgba(34, 197, 94, 0.22), transparent 46%),
+    radial-gradient(circle at 84% 28%, rgba(16, 185, 129, 0.18), transparent 42%),
+    radial-gradient(circle at 50% 90%, rgba(148, 163, 184, 0.14), transparent 52%);
+}
+
+.chat-theme-aurora-sky {
+  background-color: #070D19;
+  background-image:
+    radial-gradient(ellipse at 20% 18%, rgba(16, 185, 129, 0.28), transparent 48%),
+    radial-gradient(ellipse at 78% 26%, rgba(14, 165, 233, 0.24), transparent 46%),
+    radial-gradient(ellipse at 54% 78%, rgba(99, 102, 241, 0.2), transparent 52%);
+}
+
+.chat-theme-retro-arcade {
+  background-color: #0D0819;
+  background-image:
+    radial-gradient(circle at 50% 15%, rgba(168, 85, 247, 0.28), transparent 46%),
+    radial-gradient(circle at 82% 85%, rgba(236, 72, 153, 0.2), transparent 44%),
+    linear-gradient(to right, rgba(168, 85, 247, 0.09) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(168, 85, 247, 0.09) 1px, transparent 1px);
+  background-size: auto, auto, 24px 24px, 24px 24px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

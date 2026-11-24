@@ -1,0 +1,307 @@
+{
+  "userPreferences": {},
+  "callHistory": {},
+  "backups": {
+    "8qpljpNoBxavtOOb6X8FCmQskng2": {
+      "uid": "8qpljpNoBxavtOOb6X8FCmQskng2",
+      "displayName": "razan Hayaf",
+      "roomsCount": 12,
+      "messagesCount": 0,
+      "rooms": [
+        {
+          "id": "priyanshu_d89062e5",
+          "name": "Priyanshu",
+          "visibility": "public",
+          "category": "club",
+          "memberCount": 5,
+          "lastMessageText": "Encrypted message"
+        },
+        {
+          "id": "sriju_cf2be306",
+          "name": "gandu",
+          "visibility": "public",
+          "category": "club",
+          "memberCount": 2,
+          "lastMessageText": "Encrypted message"
+        },
+        {
+          "id": "ahm-ahm_7a52c825",
+          "name": "Ahm ahm",
+          "visibility": "private",
+          "category": "club",
+          "memberCount": 1,
+          "lastMessageText": "Room created"
+        },
+        {
+          "id": "alta-vgu_7cd34080",
+          "name": "alta vgu",
+          "visibility": "public",
+          "category": "event",
+          "memberCount": 2,
+          "lastMessageText": "Hii"
+        },
+        {
+          "id": "fall-showcase-crew_97bcba53",
+          "name": "Fall Showcase Crew",
+          "visibility": "private",
+          "category": "event",
+          "memberCount": 1,
+          "lastMessageText": "hii"
+        },
+        {
+          "id": "library-study-commons_e8b07d56",
+          "name": "Library Study Commons",
+          "visibility": "public",
+          "category": "class",
+          "memberCount": 1,
+          "lastMessageText": "Use threads to keep problem set solutions organized without flooding the main feed."
+        },
+        {
+          "id": "robotics-makers-lab_00af3256",
+          "name": "Robotics & Makers Lab",
+          "visibility": "public",
+          "category": "club",
+          "memberCount": 1,
+          "lastMessageText": "Makerspace benches are open M-F 2 PM–9 PM. Share build photos, pin parts lists, or vote on this week’s build night focus below."
+        },
+        {
+          "id": "general-quad_ccdb7a3f",
+          "name": "General Quad",
+          "visibility": "public",
+          "category": "topic",
+          "memberCount": 1,
+          "lastMessageText": "Event: Fall Student Club Showcase & Acoustic Night"
+        },
+        {
+          "id": "dm_1UtoL7iawkZBhxlXqbG1H2gScI73_8qpljpNoBxavtOOb6X8FCmQskng2",
+          "name": "razan Hayaf & Aditya Gaurav",
+          "visibility": "dm",
+          "category": "direct",
+          "memberCount": 2,
+          "lastMessageText": "Voice note (2s)"
+        },
+        {
+          "id": "dm_8qpljpNoBxavtOOb6X8FCmQskng2_XXsoKJh5YCVVoIObuXxKEkF223n1",
+          "name": "razan Hayaf & Mallika Baig",
+          "visibility": "dm",
+          "category": "direct",
+          "memberCount": 2,
+          "lastMessageText": "Encrypted message"
+        },
+        {
+          "id": "dm_8qpljpNoBxavtOOb6X8FCmQskng2_T6GGkDkjPqWV34NanP0Parkd7Ix2",
+          "name": "Parveen Ram & razan Hayaf",
+          "visibility": "dm",
+          "category": "direct",
+          "memberCount": 2,
+          "lastMessageText": "Encrypted message"
+        },
+        {
+          "id": "dm_8qpljpNoBxavtOOb6X8FCmQskng2_h2NGedqwDNRKJUP3p6hi5TUoQ233",
+          "name": "razan Hayaf & ALTA VGUJ",
+          "visibility": "dm",
+          "category": "direct",
+          "memberCount": 2,
+          "lastMessageText": "Photo"
+        }
+      ],
+      "recentMessages": [],
+      "savedAt": 1795464629927
+    }
+  },
+  "reels": [
+    {
+      "id": "reel_starter_campus_vibes",
+      "authorUid": "quadline_studio",
+      "authorName": "Aarav Spark",
+      "authorHandle": "aarav.reels",
+      "authorPhoto": "",
+      "caption": "Late-night hackathon sprint at the library — shipping new features with lo-fi beats and iced coffee.",
+      "audioTitle": "Midnight Lo-Fi · Campus Mix",
+      "mediaType": "scene",
+      "mediaUrl": "",
+      "sceneTheme": "aurora",
+      "sceneEmoji": "🚀",
+      "sceneHeadline": "Hackathon Night Sprint",
+      "tags": [
+        "campus",
+        "coding",
+        "vibes"
+      ],
+      "likedBy": [
+        "demo_1",
+        "demo_2",
+        "demo_3"
+      ],
+      "comments": [
+        {
+          "id": "rc_1",
+          "uid": "demo_2",
+          "authorName": "Riya Nova",
+          "authorPhoto": "",
+          "text": "The energy at 2 AM hits different!",
+          "createdAt": 1795349152915
+        }
+      ],
+      "views": 148,
+      "createdAt": 1795338352915
+    },
+    {
+      "id": "reel_starter_golden_hour",
+      "authorUid": "quadline_studio",
+      "authorName": "Meera Craft",
+      "authorHandle": "meera.films",
+      "authorPhoto": "",
+      "caption": "Golden hour walk across the main quad before the weekend music jam starts. Drop your favorite track below!",
+      "audioTitle": "Sunset Acoustic · Original Audio",
+      "mediaType": "scene",
+      "mediaUrl": "",
+      "sceneTheme": "sunset",
+      "sceneEmoji": "🌅",
+      "sceneHeadline": "Golden Hour Quad Walk",
+      "tags": [
+        "sunset",
+        "music",
+        "quad"
+      ],
+      "likedBy": [
+        "demo_1",
+        "demo_4"
+      ],
+      "comments": [],
+      "views": 214,
+      "createdAt": 1795320352915
+    },
+    {
+      "id": "reel_starter_voice_fx",
+      "authorUid": "quadline_studio",
+      "authorName": "Kabir Pulse",
+      "authorHandle": "kabir.beats",
+      "authorPhoto": "",
+      "caption": "Testing the Robot & Alien voice changer on a group call — nobody could stop laughing for 10 minutes straight.",
+      "audioTitle": "Studio FX · Voice Jam",
+      "mediaType": "scene",
+      "mediaUrl": "",
+      "sceneTheme": "neon_grid",
+      "sceneEmoji": "🎧",
+      "sceneHeadline": "Live Voice FX Challenge",
+      "tags": [
+        "calls",
+        "voicefx",
+        "funny"
+      ],
+      "likedBy": [
+        "demo_1",
+        "demo_2",
+        "demo_3",
+        "demo_5"
+      ],
+      "comments": [
+        {
+          "id": "rc_2",
+          "uid": "demo_3",
+          "authorName": "Dev Orbit",
+          "authorPhoto": "",
+          "text": "Try the Alien effect with echo next time!",
+          "createdAt": 1795345552915
+        }
+      ],
+      "views": 312,
+      "createdAt": 1795295152915
+    },
+    {
+      "id": "reel_starter_chai_crew",
+      "authorUid": "quadline_studio",
+      "authorName": "Zoya Wave",
+      "authorHandle": "zoya.vibes",
+      "authorPhoto": "",
+      "caption": "Post-lecture chai break with the squad. Upload your own video or photo Reel using the + Create button!",
+      "audioTitle": "Chai & Chill · Ambient",
+      "mediaType": "scene",
+      "mediaUrl": "",
+      "sceneTheme": "ocean",
+      "sceneEmoji": "☕",
+      "sceneHeadline": "Campus Chai Crew",
+      "tags": [
+        "friends",
+        "chai",
+        "daily"
+      ],
+      "likedBy": [
+        "demo_2"
+      ],
+      "comments": [],
+      "views": 189,
+      "createdAt": 1795266352915
+    },
+    {
+      "id": "reel_starter_esports",
+      "authorUid": "quadline_studio",
+      "authorName": "Arjun Pixel",
+      "authorHandle": "arjun.gg",
+      "authorPhoto": "",
+      "caption": "Final round clutch moment from Friday Esports night. Tap heart twice if you watched it live!",
+      "audioTitle": "Arena Hype · Beat Loop",
+      "mediaType": "scene",
+      "mediaUrl": "",
+      "sceneTheme": "midnight",
+      "sceneEmoji": "🎮",
+      "sceneHeadline": "Friday Esports Clutch",
+      "tags": [
+        "gaming",
+        "esports",
+        "highlights"
+      ],
+      "likedBy": [
+        "demo_1",
+        "demo_3",
+        "demo_4",
+        "demo_5",
+        "demo_6"
+      ],
+      "comments": [],
+      "views": 420,
+      "createdAt": 1795223152915
+    }
+  ],
+  "spotifyTokens": {},
+  "socialRelations": [
+    {
+      "id": "8qpljpNoBxavtOOb6X8FCmQskng2__XXsoKJh5YCVVoIObuXxKEkF223n1",
+      "requesterUid": "8qpljpNoBxavtOOb6X8FCmQskng2",
+      "requesterName": "razan Hayaf",
+      "requesterHandle": "razanhayaf",
+      "requesterPhoto": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%22128%22%20height%3D%22128%22%3E%20%3Cdefs%3E%20%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%2310B981%22%2F%3E%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23047857%22%2F%3E%20%3C%2FlinearGradient%3E%20%3C%2Fdefs%3E%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2250%22%20fill%3D%22url(%23bg)%22%2F%3E%20%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2239%22%20fill%3D%22none%22%20stroke%3D%22%23A7F3D0%22%20stroke-width%3D%222.5%22%20opacity%3D%220.55%22%2F%3E%20%3Ctext%20x%3D%2250%22%20y%3D%2263%22%20text-anchor%3D%22middle%22%20font-size%3D%2244%22%20font-family%3D%22Apple%20Color%20Emoji%2C%20Segoe%20UI%20Emoji%2C%20Noto%20Color%20Emoji%2C%20sans-serif%22%3E%F0%9F%90%BC%3C%2Ftext%3E%20%3C%2Fsvg%3E",
+      "targetUid": "XXsoKJh5YCVVoIObuXxKEkF223n1",
+      "targetName": "Mallika Baig",
+      "targetHandle": "mallikabaig1",
+      "targetPhoto": "https://lh3.googleusercontent.com/a/ACg8ocI0DHPciFnGFmNyi05H1AY7kHZP_fH6IL8JcYQb0iVbABNcgQ=s96-c",
+      "status": "pending",
+      "createdAt": 1795355750770,
+      "updatedAt": 1795355750770
+    }
+  ],
+  "follows": [],
+  "socialNotifications": [],
+  "roomThemes": {},
+  "customMedia": [],
+  "accounts": [
+    {
+      "uid": "8qpljpNoBxavtOOb6X8FCmQskng2",
+      "email": "razanhayaf@gmail.com",
+      "displayName": "razan Hayaf",
+      "handle": "razanhayaf",
+      "bio": "Excited to connect across campus clubs and study groups.",
+      "photoUrl": "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%20width%3D%22128%22%20height%3D%22128%22%3E%20%3Cdefs%3E%20%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%20%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%2310B981%22%2F%3E%20%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%23047857%22%2F%3E%20%3C%2FlinearGradient%3E%20%3C%2Fdefs%3E%20%3Crect%20width%3D%22100%22%20height%3D%22100%22%20rx%3D%2250%22%20fill%3D%22url(%23bg)%22%2F%3E%20%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2239%22%20fill%3D%22none%22%20stroke%3D%22%23A7F3D0%22%20stroke-width%3D%222.5%22%20opacity%3D%220.55%22%2F%3E%20%3Ctext%20x%3D%2250%22%20y%3D%2263%22%20text-anchor%3D%22middle%22%20font-size%3D%2244%22%20font-family%3D%22Apple%20Color%20Emoji%2C%20Segoe%20UI%20Emoji%2C%20Noto%20Color%20Emoji%2C%20sans-serif%22%3E%F0%9F%90%BC%3C%2Ftext%3E%20%3C%2Fsvg%3E",
+      "authMethod": "campus_sso",
+      "createdAt": 1795355714390,
+      "lastLoginAt": 1795464626413
+    }
+  ],
+  "stories": [],
+  "vapidKeys": {
+    "publicKey": "BMq0_-fPR40DMLkP5vd2T9_D0nrZTXu_Qpcf7kfAk9Cm-FJ27MqmiUgWU45rNq_VYZDjd_UkfBw4kWZpvNrIiE4",
+    "privateKey": "Dya2SWc-KnhdNJ_hetoaRl-YynBJLI8eT3Ws5GRG6Es"
+  },
+  "pushSubscriptions": {}
+}

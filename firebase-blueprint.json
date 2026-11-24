@@ -1,0 +1,295 @@
+{
+  "entities": {
+    "Profile": {
+      "title": "Public Campus Profile",
+      "description": "Publicly visible campus member identity without PII (no email or phone).",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "handle": { "type": "string", "minLength": 2, "maxLength": 32, "pattern": "^[a-z0-9_.-]+$" },
+        "bio": { "type": "string", "maxLength": 240 },
+        "photoUrl": { "type": "string", "maxLength": 45000 },
+        "majorOrClub": { "type": "string", "maxLength": 80 },
+        "status": { "type": "string", "enum": ["online", "away", "busy", "offline"] },
+        "statusMessage": { "type": "string", "maxLength": 80 },
+        "discoverable": { "type": "boolean" },
+        "lastSeenAt": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "displayName", "handle", "bio", "photoUrl", "majorOrClub", "status", "statusMessage", "discoverable", "lastSeenAt", "createdAt", "updatedAt"]
+    },
+    "UserPrivate": {
+      "title": "Private User Account Settings",
+      "description": "Owner-only PII and notification/blocking settings isolated from public profiles.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "email": { "type": "string", "minLength": 3, "maxLength": 254 },
+        "authMethod": { "type": "string", "enum": ["google", "campus_sso", "email"] },
+        "blockedUserIds": { "type": "array", "description": "Bounded up to 100 user IDs." },
+        "mutedRoomIds": { "type": "array", "description": "Bounded up to 200 room IDs." },
+        "roomNotificationPrefs": { "type": "object", "description": "Map of roomId to all|mentions|mute." },
+        "pushEnabled": { "type": "boolean" },
+        "readReceiptsEnabled": { "type": "boolean", "description": "Controls whether the user sends read receipts when reading messages." },
+        "theme": { "type": "string", "enum": ["light", "dark", "system"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "authMethod", "blockedUserIds", "mutedRoomIds", "roomNotificationPrefs", "pushEnabled", "theme", "createdAt", "updatedAt"]
+    },
+    "UserRoomMembership": {
+      "title": "User Room Membership Index",
+      "description": "Owner-isolated index of rooms the user belongs to for fast sidebar listing.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "roomId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "role": { "type": "string", "enum": ["owner", "moderator", "member"] },
+        "joinedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "roomId", "role", "joinedAt"]
+    },
+    "Room": {
+      "title": "Campus Room or Direct Message",
+      "description": "A public/private club, class, event, topic room or 2-person direct message.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "slug": { "type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[a-z0-9\\-]+$" },
+        "description": { "type": "string", "maxLength": 300 },
+        "category": { "type": "string", "enum": ["club", "class", "event", "topic", "direct"] },
+        "visibility": { "type": "string", "enum": ["public", "private", "dm"] },
+        "coverImage": { "type": "string", "maxLength": 500 },
+        "ownerId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "dmParticipantIds": { "type": "array", "description": "Bounded to 0 (rooms) or 2 (DMs) user IDs." },
+        "memberCount": { "type": "number" },
+        "lastMessageText": { "type": "string", "maxLength": 240 },
+        "lastMessageAt": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "slug", "description", "category", "visibility", "coverImage", "ownerId", "dmParticipantIds", "memberCount", "lastMessageText", "lastMessageAt", "createdAt", "updatedAt"]
+    },
+    "RoomInvite": {
+      "title": "Room Invite Code",
+      "description": "Lookup-by-code invite document enabling joining private rooms via invite link or code.",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string", "minLength": 4, "maxLength": 24, "pattern": "^[A-Z0-9\\-]+$" },
+        "roomId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "roomName": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "createdBy": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "active": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["code", "roomId", "roomName", "createdBy", "active", "createdAt"]
+    },
+    "RoomMember": {
+      "title": "Room Member",
+      "description": "Subcollection membership record with role and read-receipt marker.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "roomId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "role": { "type": "string", "enum": ["owner", "moderator", "member"] },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "handle": { "type": "string", "minLength": 2, "maxLength": 32 },
+        "photoUrl": { "type": "string", "maxLength": 45000 },
+        "inviteCodeUsed": { "type": "string", "maxLength": 24 },
+        "lastReadAt": { "type": "string", "format": "date-time" },
+        "joinedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "roomId", "role", "displayName", "handle", "photoUrl", "inviteCodeUsed", "lastReadAt", "joinedAt"]
+    },
+    "JoinRequest": {
+      "title": "Private Room Join Request",
+      "description": "Request to join a private room awaiting moderator or owner review.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "roomId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "handle": { "type": "string", "minLength": 2, "maxLength": 32 },
+        "photoUrl": { "type": "string", "maxLength": 45000 },
+        "note": { "type": "string", "maxLength": 240 },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "reviewedBy": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "roomId", "displayName", "handle", "photoUrl", "note", "status", "reviewedBy", "createdAt", "updatedAt"]
+    },
+    "Message": {
+      "title": "Room Message",
+      "description": "Live chat message supporting text, images, files, links, polls, voice notes, events, replies, threads, reactions, pins, and read receipts.",
+      "type": "object",
+      "properties": {
+        "roomId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "authorId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "authorName": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "authorPhoto": { "type": "string", "maxLength": 45000 },
+        "kind": { "type": "string", "enum": ["text", "image", "file", "poll", "voice", "event", "system"] },
+        "text": { "type": "string", "maxLength": 4000 },
+        "mediaUrl": { "type": "string", "maxLength": 350000 },
+        "thumbnailUrl": { "type": "string", "maxLength": 180000 },
+        "mediaName": { "type": "string", "maxLength": 160 },
+        "mediaMime": { "type": "string", "maxLength": 100 },
+        "mediaSize": { "type": "number", "description": "File size in bytes up to 90 MB (94,371,840 bytes)." },
+        "voiceDurationSec": { "type": "number", "description": "Voice note duration in seconds (1 to 300)." },
+        "voiceEffect": { "type": "string", "enum": ["normal", "deep", "high_pitch", "robot", "echo", "child", "old_man", "alien"] },
+        "waveform": { "type": "array", "description": "Bounded up to 64 normalized amplitude peaks." },
+        "linkPreview": { "type": "object" },
+        "poll": { "type": "object" },
+        "eventId": { "type": "string", "maxLength": 128 },
+        "replyToId": { "type": "string", "maxLength": 128 },
+        "replyToAuthor": { "type": "string", "maxLength": 60 },
+        "replyToSnippet": { "type": "string", "maxLength": 180 },
+        "threadRootId": { "type": "string", "maxLength": 128 },
+        "threadReplyCount": { "type": "number" },
+        "mentionedUids": { "type": "array", "description": "Bounded up to 20 user IDs." },
+        "reactions": { "type": "object", "description": "Map of emoji to array of voter UIDs." },
+        "deliveredTo": { "type": "array", "description": "Bounded up to 100 recipient UIDs who received the message." },
+        "readBy": { "type": "array", "description": "Bounded up to 100 reader UIDs." },
+        "pinned": { "type": "boolean" },
+        "pinnedBy": { "type": "string", "maxLength": 128 },
+        "edited": { "type": "boolean" },
+        "deleted": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["roomId", "authorId", "authorName", "authorPhoto", "kind", "text", "mediaUrl", "mediaName", "mediaMime", "mediaSize", "voiceDurationSec", "eventId", "replyToId", "replyToAuthor", "replyToSnippet", "threadRootId", "threadReplyCount", "mentionedUids", "reactions", "readBy", "pinned", "pinnedBy", "edited", "deleted", "createdAt", "updatedAt"]
+    },
+    "RoomEvent": {
+      "title": "Campus Room Event",
+      "description": "Coordinated room event with date, location, RSVP lists, and reminder settings.",
+      "type": "object",
+      "properties": {
+        "roomId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "description": { "type": "string", "maxLength": 600 },
+        "location": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "startAt": { "type": "string", "minLength": 8, "maxLength": 40 },
+        "endAt": { "type": "string", "maxLength": 40 },
+        "coverImage": { "type": "string", "maxLength": 500 },
+        "creatorId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "creatorName": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "rsvpGoing": { "type": "array", "description": "Bounded up to 200 user IDs." },
+        "rsvpMaybe": { "type": "array", "description": "Bounded up to 200 user IDs." },
+        "reminderMinutes": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["roomId", "title", "description", "location", "startAt", "endAt", "coverImage", "creatorId", "creatorName", "rsvpGoing", "rsvpMaybe", "reminderMinutes", "createdAt", "updatedAt"]
+    },
+    "ModerationReport": {
+      "title": "Safety & Moderation Report",
+      "description": "Member-submitted report of a message or member for moderator review.",
+      "type": "object",
+      "properties": {
+        "roomId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "reporterId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "reporterName": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "targetUserId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "targetUserName": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "targetMessageId": { "type": "string", "maxLength": 128 },
+        "targetSnippet": { "type": "string", "maxLength": 240 },
+        "reason": { "type": "string", "minLength": 3, "maxLength": 400 },
+        "status": { "type": "string", "enum": ["open", "resolved", "dismissed"] },
+        "resolvedBy": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["roomId", "reporterId", "reporterName", "targetUserId", "targetUserName", "targetMessageId", "targetSnippet", "reason", "status", "resolvedBy", "createdAt", "updatedAt"]
+    },
+    "RoomActivity": {
+      "title": "Room Moderation & Activity Entry",
+      "description": "Audit log of room moderation actions and major room events.",
+      "type": "object",
+      "properties": {
+        "roomId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "actorId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "actorName": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "action": { "type": "string", "enum": ["room_created", "member_joined", "member_removed", "role_updated", "message_deleted", "message_pinned", "join_approved", "join_rejected", "report_resolved", "invite_created"] },
+        "summary": { "type": "string", "minLength": 1, "maxLength": 240 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["roomId", "actorId", "actorName", "action", "summary", "createdAt"]
+    },
+    "Notification": {
+      "title": "In-App Notification",
+      "description": "Recipient-scoped alert for mentions, replies, direct messages, join requests, and events.",
+      "type": "object",
+      "properties": {
+        "recipientId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "senderId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "senderName": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "roomId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "roomName": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "messageId": { "type": "string", "maxLength": 128 },
+        "type": { "type": "string", "enum": ["mention", "reply", "dm", "join_request", "join_approved", "event_reminder", "role_change"] },
+        "title": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "body": { "type": "string", "maxLength": 240 },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["recipientId", "senderId", "senderName", "roomId", "roomName", "messageId", "type", "title", "body", "read", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/profiles/{userId}": {
+      "schema": { "$ref": "#/entities/Profile" },
+      "description": "Public campus member profiles (no PII)."
+    },
+    "/userPrivate/{userId}": {
+      "schema": { "$ref": "#/entities/UserPrivate" },
+      "description": "Private user PII, blocked users, muted rooms, and notification preferences."
+    },
+    "/userMemberships/{userId}/rooms/{roomId}": {
+      "schema": { "$ref": "#/entities/UserRoomMembership" },
+      "description": "Per-user room membership index for sidebar loading."
+    },
+    "/rooms/{roomId}": {
+      "schema": { "$ref": "#/entities/Room" },
+      "description": "Public/private campus rooms and direct message threads."
+    },
+    "/invites/{code}": {
+      "schema": { "$ref": "#/entities/RoomInvite" },
+      "description": "Invite code lookup table for private room invitations."
+    },
+    "/rooms/{roomId}/members/{memberId}": {
+      "schema": { "$ref": "#/entities/RoomMember" },
+      "description": "Authoritative room membership and RBAC roles (owner, moderator, member)."
+    },
+    "/rooms/{roomId}/joinRequests/{requestId}": {
+      "schema": { "$ref": "#/entities/JoinRequest" },
+      "description": "Pending and reviewed requests to join private rooms."
+    },
+    "/rooms/{roomId}/messages/{messageId}": {
+      "schema": { "$ref": "#/entities/Message" },
+      "description": "Real-time messages, replies, threads, polls, media, and voice notes inside a room."
+    },
+    "/rooms/{roomId}/events/{eventId}": {
+      "schema": { "$ref": "#/entities/RoomEvent" },
+      "description": "Room events with RSVP lists and reminders."
+    },
+    "/rooms/{roomId}/reports/{reportId}": {
+      "schema": { "$ref": "#/entities/ModerationReport" },
+      "description": "Moderation reports submitted by room members."
+    },
+    "/rooms/{roomId}/activity/{activityId}": {
+      "schema": { "$ref": "#/entities/RoomActivity" },
+      "description": "Room moderation and membership activity log."
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/Notification" },
+      "description": "Recipient-scoped in-app notifications."
+    },
+    "/admins/{userId}": {
+      "schema": "string",
+      "description": "Trusted global campus admin roster."
+    }
+  }
+}

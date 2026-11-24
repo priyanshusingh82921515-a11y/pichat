@@ -1,0 +1,861 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // =========================================================
+    // GLOBAL PRIMITIVES & HELPER FUNCTIONS
+    // =========================================================
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidInviteCode(code) {
+      return code is string && code.size() >= 4 && code.size() <= 24 && code.matches('^[A-Z0-9\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function isAdmin() {
+      return isVerified() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        request.auth.token.email == 'himanshu9199205385@gmail.com'
+      );
+    }
+
+    function isRoomMember(roomId) {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/rooms/$(roomId)/members/$(request.auth.uid));
+    }
+
+    function roomMemberRole(roomId) {
+      return get(/databases/$(database)/documents/rooms/$(roomId)/members/$(request.auth.uid)).data.role;
+    }
+
+    function isRoomOwner(roomId) {
+      return isRoomMember(roomId) && roomMemberRole(roomId) == 'owner';
+    }
+
+    function isRoomMod(roomId) {
+      return isRoomMember(roomId) && roomMemberRole(roomId) in ['owner', 'moderator'];
+    }
+
+    function validListOfStrings(arr, maxLen) {
+      return arr is list && arr.size() <= maxLen && (arr.size() == 0 || arr[0] is string);
+    }
+
+    // =========================================================
+    // VALIDATION BLUEPRINTS (SYNCHRONIZED WITH firebase-blueprint.json)
+    // =========================================================
+
+    function isValidProfile(data, userId) {
+      return data.keys().hasAll([
+          'uid', 'displayName', 'handle', 'bio', 'photoUrl', 'majorOrClub',
+          'status', 'statusMessage', 'discoverable', 'lastSeenAt', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'uid', 'displayName', 'handle', 'bio', 'photoUrl', 'majorOrClub',
+          'status', 'statusMessage', 'discoverable', 'lastSeenAt', 'createdAt', 'updatedAt'
+        ]) &&
+        data.uid is string && data.uid == userId && isValidId(data.uid) &&
+        data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 60 &&
+        data.handle is string && data.handle.size() >= 2 && data.handle.size() <= 32 && data.handle.matches('^[a-z0-9_.-]+$') &&
+        data.bio is string && data.bio.size() <= 240 &&
+        data.photoUrl is string && data.photoUrl.size() <= 45000 &&
+        data.majorOrClub is string && data.majorOrClub.size() <= 80 &&
+        data.status is string && data.status in ['online', 'away', 'busy', 'offline'] &&
+        data.statusMessage is string && data.statusMessage.size() <= 80 &&
+        data.discoverable is bool &&
+        data.lastSeenAt is timestamp &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidUserPrivate(data, userId) {
+      return data.keys().hasAll([
+          'uid', 'email', 'authMethod', 'blockedUserIds', 'mutedRoomIds',
+          'roomNotificationPrefs', 'pushEnabled', 'theme', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'uid', 'email', 'authMethod', 'blockedUserIds', 'mutedRoomIds',
+          'roomNotificationPrefs', 'pushEnabled', 'readReceiptsEnabled', 'theme', 'createdAt', 'updatedAt'
+        ]) &&
+        data.uid is string && data.uid == userId && isValidId(data.uid) &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 254 &&
+        data.authMethod is string && data.authMethod in ['google', 'campus_sso', 'email'] &&
+        validListOfStrings(data.blockedUserIds, 100) &&
+        validListOfStrings(data.mutedRoomIds, 200) &&
+        data.roomNotificationPrefs is map && data.roomNotificationPrefs.size() <= 200 &&
+        data.pushEnabled is bool &&
+        (!('readReceiptsEnabled' in data) || data.readReceiptsEnabled is bool) &&
+        data.theme is string && data.theme in ['light', 'dark', 'system'] &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidUserMembership(data, userId, roomId) {
+      return data.keys().hasAll(['uid', 'roomId', 'role', 'joinedAt']) &&
+        data.keys().hasOnly(['uid', 'roomId', 'role', 'joinedAt']) &&
+        data.uid is string && data.uid == userId && isValidId(data.uid) &&
+        data.roomId is string && data.roomId == roomId && isValidId(data.roomId) &&
+        data.role is string && data.role in ['owner', 'moderator', 'member'] &&
+        data.joinedAt is timestamp;
+    }
+
+    function isValidRoom(data, roomId) {
+      return data.keys().hasAll([
+          'id', 'name', 'slug', 'description', 'category', 'visibility',
+          'coverImage', 'ownerId', 'dmParticipantIds', 'memberCount',
+          'lastMessageText', 'lastMessageAt', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'id', 'name', 'slug', 'description', 'category', 'visibility',
+          'coverImage', 'ownerId', 'dmParticipantIds', 'memberCount',
+          'lastMessageText', 'lastMessageAt', 'createdAt', 'updatedAt'
+        ]) &&
+        data.id is string && data.id == roomId && isValidId(data.id) &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 80 &&
+        data.slug is string && data.slug.size() >= 1 && data.slug.size() <= 64 && data.slug.matches('^[a-z0-9\\-]+$') &&
+        data.description is string && data.description.size() <= 300 &&
+        data.category is string && data.category in ['club', 'class', 'event', 'topic', 'direct'] &&
+        data.visibility is string && data.visibility in ['public', 'private', 'dm'] &&
+        data.coverImage is string && data.coverImage.size() <= 500 &&
+        data.ownerId is string && isValidId(data.ownerId) &&
+        validListOfStrings(data.dmParticipantIds, 2) &&
+        ((data.visibility == 'dm' && data.dmParticipantIds.size() == 2) ||
+         (data.visibility != 'dm' && data.dmParticipantIds.size() == 0)) &&
+        data.memberCount is number && data.memberCount >= 0 && data.memberCount <= 100000 &&
+        data.lastMessageText is string && data.lastMessageText.size() <= 240 &&
+        data.lastMessageAt is timestamp &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidInvite(data, code) {
+      return data.keys().hasAll(['code', 'roomId', 'roomName', 'createdBy', 'active', 'createdAt']) &&
+        data.keys().hasOnly(['code', 'roomId', 'roomName', 'createdBy', 'active', 'createdAt']) &&
+        data.code is string && data.code == code && isValidInviteCode(data.code) &&
+        data.roomId is string && isValidId(data.roomId) &&
+        data.roomName is string && data.roomName.size() >= 1 && data.roomName.size() <= 80 &&
+        data.createdBy is string && isValidId(data.createdBy) &&
+        data.active is bool &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidRoomMember(data, roomId, memberId) {
+      return data.keys().hasAll([
+          'uid', 'roomId', 'role', 'displayName', 'handle', 'photoUrl',
+          'inviteCodeUsed', 'lastReadAt', 'joinedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'uid', 'roomId', 'role', 'displayName', 'handle', 'photoUrl',
+          'inviteCodeUsed', 'lastReadAt', 'joinedAt'
+        ]) &&
+        data.uid is string && data.uid == memberId && isValidId(data.uid) &&
+        data.roomId is string && data.roomId == roomId && isValidId(data.roomId) &&
+        data.role is string && data.role in ['owner', 'moderator', 'member'] &&
+        data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 60 &&
+        data.handle is string && data.handle.size() >= 2 && data.handle.size() <= 32 &&
+        data.photoUrl is string && data.photoUrl.size() <= 45000 &&
+        data.inviteCodeUsed is string && data.inviteCodeUsed.size() <= 24 &&
+        data.lastReadAt is timestamp &&
+        data.joinedAt is timestamp;
+    }
+
+    function isValidJoinRequest(data, roomId, requestId) {
+      return data.keys().hasAll([
+          'uid', 'roomId', 'displayName', 'handle', 'photoUrl',
+          'note', 'status', 'reviewedBy', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'uid', 'roomId', 'displayName', 'handle', 'photoUrl',
+          'note', 'status', 'reviewedBy', 'createdAt', 'updatedAt'
+        ]) &&
+        data.uid is string && data.uid == requestId && isValidId(data.uid) &&
+        data.roomId is string && data.roomId == roomId && isValidId(data.roomId) &&
+        data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 60 &&
+        data.handle is string && data.handle.size() >= 2 && data.handle.size() <= 32 &&
+        data.photoUrl is string && data.photoUrl.size() <= 45000 &&
+        data.note is string && data.note.size() <= 240 &&
+        data.status is string && data.status in ['pending', 'approved', 'rejected'] &&
+        data.reviewedBy is string && data.reviewedBy.size() <= 128 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidMessage(data, roomId) {
+      return data.keys().hasAll([
+          'roomId', 'authorId', 'authorName', 'authorPhoto', 'kind', 'text',
+          'mediaUrl', 'mediaName', 'mediaMime', 'mediaSize', 'voiceDurationSec',
+          'eventId', 'replyToId', 'replyToAuthor', 'replyToSnippet',
+          'threadRootId', 'threadReplyCount', 'mentionedUids', 'reactions',
+          'readBy', 'pinned', 'pinnedBy', 'edited', 'deleted', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'roomId', 'authorId', 'authorName', 'authorPhoto', 'kind', 'text',
+          'mediaUrl', 'thumbnailUrl', 'mediaName', 'mediaMime', 'mediaSize',
+          'voiceDurationSec', 'voiceEffect', 'waveform',
+          'linkPreview', 'poll', 'eventId', 'replyToId', 'replyToAuthor', 'replyToSnippet',
+          'threadRootId', 'threadReplyCount', 'mentionedUids', 'reactions',
+          'deliveredTo', 'readBy', 'pinned', 'pinnedBy', 'edited', 'deleted', 'createdAt', 'updatedAt'
+        ]) &&
+        data.roomId is string && data.roomId == roomId && isValidId(data.roomId) &&
+        data.authorId is string && isValidId(data.authorId) &&
+        data.authorName is string && data.authorName.size() >= 1 && data.authorName.size() <= 60 &&
+        data.authorPhoto is string && data.authorPhoto.size() <= 45000 &&
+        data.kind is string && data.kind in ['text', 'image', 'file', 'poll', 'voice', 'event', 'system'] &&
+        data.text is string && data.text.size() <= 4000 &&
+        data.mediaUrl is string && data.mediaUrl.size() <= 350000 &&
+        (!('thumbnailUrl' in data) || (data.thumbnailUrl is string && data.thumbnailUrl.size() <= 180000)) &&
+        data.mediaName is string && data.mediaName.size() <= 160 &&
+        data.mediaMime is string && data.mediaMime.size() <= 100 &&
+        data.mediaSize is number && data.mediaSize >= 0 && data.mediaSize <= 94371840 &&
+        data.voiceDurationSec is number && data.voiceDurationSec >= 0 && data.voiceDurationSec <= 300 &&
+        (!('voiceEffect' in data) || (data.voiceEffect is string && data.voiceEffect in ['normal', 'deep', 'high_pitch', 'robot', 'echo', 'child', 'old_man', 'alien'])) &&
+        (!('waveform' in data) || (data.waveform is list && data.waveform.size() <= 64 && (data.waveform.size() == 0 || data.waveform[0] is number))) &&
+        (!('linkPreview' in data) || (data.linkPreview is map && data.linkPreview.size() <= 8)) &&
+        (!('poll' in data) || (data.poll is map && data.poll.size() <= 8)) &&
+        data.eventId is string && data.eventId.size() <= 128 &&
+        data.replyToId is string && data.replyToId.size() <= 128 &&
+        data.replyToAuthor is string && data.replyToAuthor.size() <= 60 &&
+        data.replyToSnippet is string && data.replyToSnippet.size() <= 180 &&
+        data.threadRootId is string && data.threadRootId.size() <= 128 &&
+        data.threadReplyCount is number && data.threadReplyCount >= 0 && data.threadReplyCount <= 100000 &&
+        validListOfStrings(data.mentionedUids, 20) &&
+        data.reactions is map && data.reactions.size() <= 30 &&
+        (!('deliveredTo' in data) || validListOfStrings(data.deliveredTo, 100)) &&
+        validListOfStrings(data.readBy, 100) &&
+        data.pinned is bool &&
+        data.pinnedBy is string && data.pinnedBy.size() <= 128 &&
+        data.edited is bool &&
+        data.deleted is bool &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidRoomEvent(data, roomId) {
+      return data.keys().hasAll([
+          'roomId', 'title', 'description', 'location', 'startAt', 'endAt',
+          'coverImage', 'creatorId', 'creatorName', 'rsvpGoing', 'rsvpMaybe',
+          'reminderMinutes', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'roomId', 'title', 'description', 'location', 'startAt', 'endAt',
+          'coverImage', 'creatorId', 'creatorName', 'rsvpGoing', 'rsvpMaybe',
+          'reminderMinutes', 'createdAt', 'updatedAt'
+        ]) &&
+        data.roomId is string && data.roomId == roomId && isValidId(data.roomId) &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 120 &&
+        data.description is string && data.description.size() <= 600 &&
+        data.location is string && data.location.size() >= 1 && data.location.size() <= 160 &&
+        data.startAt is string && data.startAt.size() >= 8 && data.startAt.size() <= 40 &&
+        data.endAt is string && data.endAt.size() <= 40 &&
+        data.coverImage is string && data.coverImage.size() <= 500 &&
+        data.creatorId is string && isValidId(data.creatorId) &&
+        data.creatorName is string && data.creatorName.size() >= 1 && data.creatorName.size() <= 60 &&
+        validListOfStrings(data.rsvpGoing, 200) &&
+        validListOfStrings(data.rsvpMaybe, 200) &&
+        data.reminderMinutes is number && data.reminderMinutes >= 0 && data.reminderMinutes <= 1440 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidReport(data, roomId) {
+      return data.keys().hasAll([
+          'roomId', 'reporterId', 'reporterName', 'targetUserId', 'targetUserName',
+          'targetMessageId', 'targetSnippet', 'reason', 'status', 'resolvedBy',
+          'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'roomId', 'reporterId', 'reporterName', 'targetUserId', 'targetUserName',
+          'targetMessageId', 'targetSnippet', 'reason', 'status', 'resolvedBy',
+          'createdAt', 'updatedAt'
+        ]) &&
+        data.roomId is string && data.roomId == roomId && isValidId(data.roomId) &&
+        data.reporterId is string && isValidId(data.reporterId) &&
+        data.reporterName is string && data.reporterName.size() >= 1 && data.reporterName.size() <= 60 &&
+        data.targetUserId is string && isValidId(data.targetUserId) &&
+        data.targetUserName is string && data.targetUserName.size() >= 1 && data.targetUserName.size() <= 60 &&
+        data.targetMessageId is string && data.targetMessageId.size() <= 128 &&
+        data.targetSnippet is string && data.targetSnippet.size() <= 240 &&
+        data.reason is string && data.reason.size() >= 3 && data.reason.size() <= 400 &&
+        data.status is string && data.status in ['open', 'resolved', 'dismissed'] &&
+        data.resolvedBy is string && data.resolvedBy.size() <= 128 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidActivity(data, roomId) {
+      return data.keys().hasAll(['roomId', 'actorId', 'actorName', 'action', 'summary', 'createdAt']) &&
+        data.keys().hasOnly(['roomId', 'actorId', 'actorName', 'action', 'summary', 'createdAt']) &&
+        data.roomId is string && data.roomId == roomId && isValidId(data.roomId) &&
+        data.actorId is string && isValidId(data.actorId) &&
+        data.actorName is string && data.actorName.size() >= 1 && data.actorName.size() <= 60 &&
+        data.action is string && data.action in [
+          'room_created', 'member_joined', 'member_removed', 'role_updated',
+          'message_deleted', 'message_pinned', 'join_approved', 'join_rejected',
+          'report_resolved', 'invite_created'
+        ] &&
+        data.summary is string && data.summary.size() >= 1 && data.summary.size() <= 240 &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidNotification(data) {
+      return data.keys().hasAll([
+          'recipientId', 'senderId', 'senderName', 'roomId', 'roomName',
+          'messageId', 'type', 'title', 'body', 'read', 'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'recipientId', 'senderId', 'senderName', 'roomId', 'roomName',
+          'messageId', 'type', 'title', 'body', 'read', 'createdAt'
+        ]) &&
+        data.recipientId is string && isValidId(data.recipientId) &&
+        data.senderId is string && isValidId(data.senderId) &&
+        data.senderName is string && data.senderName.size() >= 1 && data.senderName.size() <= 60 &&
+        data.roomId is string && isValidId(data.roomId) &&
+        data.roomName is string && data.roomName.size() >= 1 && data.roomName.size() <= 80 &&
+        data.messageId is string && data.messageId.size() <= 128 &&
+        data.type is string && data.type in [
+          'mention', 'reply', 'dm', 'join_request', 'join_approved', 'event_reminder', 'role_change'
+        ] &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 120 &&
+        data.body is string && data.body.size() <= 240 &&
+        data.read is bool &&
+        data.createdAt is timestamp;
+    }
+
+    // =========================================================
+    // 1. PUBLIC CAMPUS PROFILES (NO PII)
+    // =========================================================
+    match /profiles/{userId} {
+      allow get: if isSignedIn() && isValidId(userId);
+      allow list: if isSignedIn() && resource.data.discoverable == true;
+
+      allow create: if isVerified() &&
+        isValidId(userId) &&
+        isOwner(userId) &&
+        isValidProfile(incoming(), userId) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+
+      allow update: if isVerified() &&
+        isValidId(userId) &&
+        isValidProfile(incoming(), userId) &&
+        incoming().uid == existing().uid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          isAdmin() ||
+          (isOwner(userId) && incoming().diff(existing()).affectedKeys().hasOnly([
+            'displayName', 'handle', 'bio', 'photoUrl', 'majorOrClub',
+            'status', 'statusMessage', 'discoverable', 'lastSeenAt', 'updatedAt'
+          ])) ||
+          (isOwner(userId) && incoming().diff(existing()).affectedKeys().hasOnly([
+            'status', 'lastSeenAt', 'updatedAt'
+          ]))
+        );
+
+      allow delete: if isAdmin() && isValidId(userId);
+    }
+
+    // =========================================================
+    // 2. PRIVATE USER PII & SETTINGS (OWNER ISOLATED)
+    // =========================================================
+    match /userPrivate/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if false;
+
+      allow create: if isVerified() &&
+        isValidId(userId) &&
+        isOwner(userId) &&
+        isValidUserPrivate(incoming(), userId) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+
+      allow update: if isVerified() &&
+        isValidId(userId) &&
+        isValidUserPrivate(incoming(), userId) &&
+        incoming().uid == existing().uid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          isAdmin() ||
+          (isOwner(userId) && incoming().diff(existing()).affectedKeys().hasOnly([
+            'blockedUserIds', 'mutedRoomIds', 'roomNotificationPrefs',
+            'pushEnabled', 'readReceiptsEnabled', 'theme', 'updatedAt'
+          ]))
+        );
+
+      allow delete: if isAdmin() && isValidId(userId);
+    }
+
+    // =========================================================
+    // 3. USER MEMBERSHIP INDEX (OWNER ISOLATED)
+    // =========================================================
+    match /userMemberships/{userId}/rooms/{roomId} {
+      allow get: if isSignedIn() && isValidId(userId) && isValidId(roomId) && isOwner(userId);
+      allow list: if isSignedIn() && resource.data.uid == request.auth.uid;
+
+      allow create: if isVerified() &&
+        isValidId(userId) &&
+        isValidId(roomId) &&
+        isOwner(userId) &&
+        isValidUserMembership(incoming(), userId, roomId) &&
+        incoming().joinedAt == request.time &&
+        existsAfter(/databases/$(database)/documents/rooms/$(roomId)/members/$(userId));
+
+      allow update: if isVerified() &&
+        isValidId(userId) &&
+        isValidId(roomId) &&
+        isValidUserMembership(incoming(), userId, roomId) &&
+        isOwner(userId) &&
+        incoming().uid == existing().uid &&
+        incoming().roomId == existing().roomId &&
+        incoming().joinedAt == existing().joinedAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['role']);
+
+      allow delete: if isVerified() && isValidId(userId) && isValidId(roomId) && (isOwner(userId) || isAdmin());
+    }
+
+    // =========================================================
+    // 4. ROOMS & DIRECT MESSAGES
+    // =========================================================
+    match /rooms/{roomId} {
+      allow get: if isSignedIn() && isValidId(roomId) && (
+        existing().visibility in ['public', 'private'] ||
+        (existing().visibility == 'dm' && request.auth.uid in existing().dmParticipantIds) ||
+        isAdmin()
+      );
+
+      allow list: if isSignedIn() && (
+        resource.data.visibility in ['public', 'private'] ||
+        request.auth.uid in resource.data.dmParticipantIds
+      );
+
+      allow create: if isVerified() &&
+        isValidId(roomId) &&
+        isValidRoom(incoming(), roomId) &&
+        incoming().ownerId == request.auth.uid &&
+        (incoming().visibility != 'dm' || request.auth.uid in incoming().dmParticipantIds) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        existsAfter(/databases/$(database)/documents/rooms/$(roomId)/members/$(request.auth.uid));
+
+      allow update: if isVerified() &&
+        isValidId(roomId) &&
+        isValidRoom(incoming(), roomId) &&
+        incoming().id == existing().id &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          isAdmin() ||
+          // Action: Owner/Mod updates room metadata
+          (isRoomMod(roomId) && incoming().diff(existing()).affectedKeys().hasOnly([
+            'name', 'description', 'category', 'visibility', 'coverImage', 'updatedAt'
+          ])) ||
+          // Action: Any group member updates group name or description (non-DM rooms)
+          (isRoomMember(roomId) &&
+            existing().visibility != 'dm' &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['name', 'description', 'updatedAt'])) ||
+          // Action: Member updates last message preview
+          (isRoomMember(roomId) && incoming().diff(existing()).affectedKeys().hasOnly([
+            'lastMessageText', 'lastMessageAt', 'updatedAt'
+          ]) && incoming().lastMessageAt == request.time) ||
+          // Action: Member joins or leaves updating memberCount by 1
+          (incoming().diff(existing()).affectedKeys().hasOnly(['memberCount', 'updatedAt']) &&
+            (incoming().memberCount == existing().memberCount + 1 ||
+             incoming().memberCount == existing().memberCount - 1) &&
+            (isRoomMember(roomId) || existsAfter(/databases/$(database)/documents/rooms/$(roomId)/members/$(request.auth.uid))))
+        );
+
+      allow delete: if isVerified() && isValidId(roomId) && (isRoomOwner(roomId) || isAdmin());
+
+      // -------------------------------------------------------
+      // 4A. ROOM MEMBERS SUBCOLLECTION (MASTER GATE SOURCE)
+      // -------------------------------------------------------
+      match /members/{memberId} {
+        allow get: if isSignedIn() && isValidId(roomId) && isValidId(memberId) && (
+          memberId == request.auth.uid || isRoomMember(roomId) || isAdmin()
+        );
+
+        allow list: if isSignedIn() && resource.data.roomId == roomId && (isRoomMember(roomId) || isAdmin());
+
+        allow create: if isVerified() &&
+          isValidId(roomId) &&
+          isValidId(memberId) &&
+          isValidRoomMember(incoming(), roomId, memberId) &&
+          incoming().joinedAt == request.time &&
+          incoming().lastReadAt == request.time &&
+          existsAfter(/databases/$(database)/documents/rooms/$(roomId)) &&
+          (
+            // Case 1: Room creator bootstrapping themselves as owner in atomic batch
+            (memberId == request.auth.uid &&
+              incoming().role == 'owner' &&
+              getAfter(/databases/$(database)/documents/rooms/$(roomId)).data.ownerId == request.auth.uid) ||
+            // Case 2: DM creator bootstrapping the 2nd DM participant in atomic batch
+            (getAfter(/databases/$(database)/documents/rooms/$(roomId)).data.visibility == 'dm' &&
+              incoming().role == 'member' &&
+              request.auth.uid in getAfter(/databases/$(database)/documents/rooms/$(roomId)).data.dmParticipantIds &&
+              memberId in getAfter(/databases/$(database)/documents/rooms/$(roomId)).data.dmParticipantIds) ||
+            // Case 3: Self-join a public room as member
+            (memberId == request.auth.uid &&
+              incoming().role == 'member' &&
+              get(/databases/$(database)/documents/rooms/$(roomId)).data.visibility == 'public') ||
+            // Case 4: Self-join a private room using an active verified invite code
+            (memberId == request.auth.uid &&
+              incoming().role == 'member' &&
+              get(/databases/$(database)/documents/rooms/$(roomId)).data.visibility == 'private' &&
+              isValidInviteCode(incoming().inviteCodeUsed) &&
+              exists(/databases/$(database)/documents/invites/$(incoming().inviteCodeUsed)) &&
+              get(/databases/$(database)/documents/invites/$(incoming().inviteCodeUsed)).data.roomId == roomId &&
+              get(/databases/$(database)/documents/invites/$(incoming().inviteCodeUsed)).data.active == true) ||
+            // Case 5: Room owner or moderator approves a pending join request
+            (isRoomMod(roomId) &&
+              incoming().role == 'member' &&
+              existsAfter(/databases/$(database)/documents/rooms/$(roomId)/joinRequests/$(memberId)) &&
+              getAfter(/databases/$(database)/documents/rooms/$(roomId)/joinRequests/$(memberId)).data.status == 'approved')
+          );
+
+        allow update: if isVerified() &&
+          isValidId(roomId) &&
+          isValidId(memberId) &&
+          isValidRoomMember(incoming(), roomId, memberId) &&
+          incoming().uid == existing().uid &&
+          incoming().roomId == existing().roomId &&
+          incoming().joinedAt == existing().joinedAt &&
+          (
+            isAdmin() ||
+            // Action: Self updates read receipt timestamp with strict server time
+            (memberId == request.auth.uid &&
+              incoming().role == existing().role &&
+              incoming().lastReadAt == request.time &&
+              incoming().diff(existing()).affectedKeys().hasOnly(['lastReadAt'])) ||
+            // Action: Self syncs cached public profile fields
+            (memberId == request.auth.uid &&
+              incoming().role == existing().role &&
+              incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'handle', 'photoUrl'])) ||
+            // Action: Room owner promotes/demotes moderator/member (cannot demote owner)
+            (isRoomOwner(roomId) &&
+              existing().role != 'owner' &&
+              incoming().role in ['moderator', 'member'] &&
+              incoming().diff(existing()).affectedKeys().hasOnly(['role']))
+          );
+
+        allow delete: if isVerified() &&
+          isValidId(roomId) &&
+          isValidId(memberId) &&
+          (
+            isAdmin() ||
+            (memberId == request.auth.uid && existing().role != 'owner') ||
+            (isRoomOwner(roomId) && existing().role != 'owner') ||
+            (isRoomMod(roomId) && existing().role == 'member')
+          );
+      }
+
+      // -------------------------------------------------------
+      // 4B. PRIVATE ROOM JOIN REQUESTS
+      // -------------------------------------------------------
+      match /joinRequests/{requestId} {
+        allow get: if isSignedIn() && isValidId(roomId) && isValidId(requestId) && (
+          requestId == request.auth.uid || isRoomMod(roomId) || isAdmin()
+        );
+
+        allow list: if isSignedIn() && resource.data.roomId == roomId && (isRoomMod(roomId) || isAdmin());
+
+        allow create: if isVerified() &&
+          isValidId(roomId) &&
+          isValidId(requestId) &&
+          requestId == request.auth.uid &&
+          isValidJoinRequest(incoming(), roomId, requestId) &&
+          incoming().status == 'pending' &&
+          incoming().reviewedBy == '' &&
+          incoming().createdAt == request.time &&
+          incoming().updatedAt == request.time &&
+          exists(/databases/$(database)/documents/rooms/$(roomId));
+
+        allow update: if isVerified() &&
+          isValidId(roomId) &&
+          isValidId(requestId) &&
+          isValidJoinRequest(incoming(), roomId, requestId) &&
+          incoming().uid == existing().uid &&
+          incoming().roomId == existing().roomId &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().updatedAt == request.time &&
+          (
+            isAdmin() ||
+            // Terminal state locking: only pending requests can transition to approved/rejected
+            (isRoomMod(roomId) &&
+              existing().status == 'pending' &&
+              incoming().status in ['approved', 'rejected'] &&
+              incoming().reviewedBy == request.auth.uid &&
+              incoming().diff(existing()).affectedKeys().hasOnly(['status', 'reviewedBy', 'updatedAt']))
+          );
+
+        allow delete: if isVerified() &&
+          isValidId(roomId) &&
+          isValidId(requestId) &&
+          (requestId == request.auth.uid || isRoomMod(roomId) || isAdmin());
+      }
+
+      // -------------------------------------------------------
+      // 4C. ROOM MESSAGES (MASTER GATE ENFORCED)
+      // -------------------------------------------------------
+      match /messages/{messageId} {
+        allow get: if isSignedIn() && isValidId(roomId) && isValidId(messageId) && (isRoomMember(roomId) || isAdmin());
+        allow list: if isSignedIn() && resource.data.roomId == roomId && (isRoomMember(roomId) || isAdmin());
+
+        allow create: if isVerified() &&
+          isValidId(roomId) &&
+          isValidId(messageId) &&
+          isValidMessage(incoming(), roomId) &&
+          incoming().authorId == request.auth.uid &&
+          incoming().deleted == false &&
+          incoming().edited == false &&
+          incoming().pinned == false &&
+          incoming().threadReplyCount == 0 &&
+          incoming().createdAt == request.time &&
+          incoming().updatedAt == request.time &&
+          isRoomMember(roomId);
+
+        allow update: if isVerified() &&
+          isValidId(roomId) &&
+          isValidId(messageId) &&
+          isValidMessage(incoming(), roomId) &&
+          incoming().roomId == existing().roomId &&
+          incoming().authorId == existing().authorId &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().updatedAt == request.time &&
+          isRoomMember(roomId) &&
+          (
+            isAdmin() ||
+            // Action: Author edits message text
+            (existing().authorId == request.auth.uid &&
+              existing().deleted == false &&
+              incoming().edited == true &&
+              incoming().diff(existing()).affectedKeys().hasOnly(['text', 'edited', 'linkPreview', 'mentionedUids', 'updatedAt'])) ||
+            // Action: Author or Mod soft-deletes message
+            ((existing().authorId == request.auth.uid || isRoomMod(roomId)) &&
+              incoming().deleted == true &&
+              incoming().diff(existing()).affectedKeys().hasOnly(['deleted', 'text', 'mediaUrl', 'thumbnailUrl', 'mediaName', 'updatedAt'])) ||
+            // Action: Mod pins or unpins message
+            (isRoomMod(roomId) &&
+              incoming().diff(existing()).affectedKeys().hasOnly(['pinned', 'pinnedBy', 'updatedAt'])) ||
+            // Action: Member toggles emoji reaction
+            (incoming().diff(existing()).affectedKeys().hasOnly(['reactions', 'updatedAt'])) ||
+            // Action: Member marks delivered receipt
+            (incoming().diff(existing()).affectedKeys().hasOnly(['deliveredTo', 'updatedAt'])) ||
+            // Action: Member marks read receipt (and optionally delivered receipt)
+            (incoming().diff(existing()).affectedKeys().hasOnly(['readBy', 'updatedAt'])) ||
+            (incoming().diff(existing()).affectedKeys().hasOnly(['readBy', 'deliveredTo', 'updatedAt'])) ||
+            // Action: Member votes on poll
+            (existing().kind == 'poll' &&
+              incoming().diff(existing()).affectedKeys().hasOnly(['poll', 'updatedAt'])) ||
+            // Action: Member increments thread reply count
+            (incoming().diff(existing()).affectedKeys().hasOnly(['threadReplyCount', 'updatedAt']) &&
+              incoming().threadReplyCount == existing().threadReplyCount + 1)
+          );
+
+        allow delete: if isVerified() &&
+          isValidId(roomId) &&
+          isValidId(messageId) &&
+          (isAdmin() || isRoomMod(roomId) || (isRoomMember(roomId) && existing().authorId == request.auth.uid));
+      }
+
+      // -------------------------------------------------------
+      // 4D. ROOM EVENTS & RSVPS (MASTER GATE ENFORCED)
+      // -------------------------------------------------------
+      match /events/{eventId} {
+        allow get: if isSignedIn() && isValidId(roomId) && isValidId(eventId) && (isRoomMember(roomId) || isAdmin());
+        allow list: if isSignedIn() && resource.data.roomId == roomId && (isRoomMember(roomId) || isAdmin());
+
+        allow create: if isVerified() &&
+          isValidId(roomId) &&
+          isValidId(eventId) &&
+          isValidRoomEvent(incoming(), roomId) &&
+          incoming().creatorId == request.auth.uid &&
+          incoming().createdAt == request.time &&
+          incoming().updatedAt == request.time &&
+          isRoomMember(roomId);
+
+        allow update: if isVerified() &&
+          isValidId(roomId) &&
+          isValidId(eventId) &&
+          isValidRoomEvent(incoming(), roomId) &&
+          incoming().roomId == existing().roomId &&
+          incoming().creatorId == existing().creatorId &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().updatedAt == request.time &&
+          isRoomMember(roomId) &&
+          (
+            isAdmin() ||
+            // Action: Creator or Mod edits event details
+            ((existing().creatorId == request.auth.uid || isRoomMod(roomId)) &&
+              incoming().diff(existing()).affectedKeys().hasOnly([
+                'title', 'description', 'location', 'startAt', 'endAt', 'coverImage', 'reminderMinutes', 'updatedAt'
+              ])) ||
+            // Action: Member updates RSVP status
+            (incoming().diff(existing()).affectedKeys().hasOnly(['rsvpGoing', 'rsvpMaybe', 'updatedAt']))
+          );
+
+        allow delete: if isVerified() &&
+          isValidId(roomId) &&
+          isValidId(eventId) &&
+          (isAdmin() || isRoomMod(roomId) || (isRoomMember(roomId) && existing().creatorId == request.auth.uid));
+      }
+
+      // -------------------------------------------------------
+      // 4E. MODERATION REPORTS (MASTER GATE + TERMINAL LOCK)
+      // -------------------------------------------------------
+      match /reports/{reportId} {
+        allow get: if isSignedIn() && isValidId(roomId) && isValidId(reportId) && (
+          isRoomMod(roomId) || (isRoomMember(roomId) && existing().reporterId == request.auth.uid) || isAdmin()
+        );
+        allow list: if isSignedIn() && resource.data.roomId == roomId && (isRoomMod(roomId) || isAdmin());
+
+        allow create: if isVerified() &&
+          isValidId(roomId) &&
+          isValidId(reportId) &&
+          isValidReport(incoming(), roomId) &&
+          incoming().reporterId == request.auth.uid &&
+          incoming().status == 'open' &&
+          incoming().resolvedBy == '' &&
+          incoming().createdAt == request.time &&
+          incoming().updatedAt == request.time &&
+          isRoomMember(roomId);
+
+        allow update: if isVerified() &&
+          isValidId(roomId) &&
+          isValidId(reportId) &&
+          isValidReport(incoming(), roomId) &&
+          incoming().roomId == existing().roomId &&
+          incoming().reporterId == existing().reporterId &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().updatedAt == request.time &&
+          (
+            isAdmin() ||
+            // Terminal state locking: open -> resolved | dismissed only
+            (isRoomMod(roomId) &&
+              existing().status == 'open' &&
+              incoming().status in ['resolved', 'dismissed'] &&
+              incoming().resolvedBy == request.auth.uid &&
+              incoming().diff(existing()).affectedKeys().hasOnly(['status', 'resolvedBy', 'updatedAt']))
+          );
+
+        allow delete: if isAdmin() && isValidId(roomId) && isValidId(reportId);
+      }
+
+      // -------------------------------------------------------
+      // 4F. ROOM ACTIVITY / MODERATION LOG
+      // -------------------------------------------------------
+      match /activity/{activityId} {
+        allow get: if isSignedIn() && isValidId(roomId) && isValidId(activityId) && (isRoomMember(roomId) || isAdmin());
+        allow list: if isSignedIn() && resource.data.roomId == roomId && (isRoomMember(roomId) || isAdmin());
+
+        allow create: if isVerified() &&
+          isValidId(roomId) &&
+          isValidId(activityId) &&
+          isValidActivity(incoming(), roomId) &&
+          incoming().actorId == request.auth.uid &&
+          incoming().createdAt == request.time &&
+          (isRoomMember(roomId) || existsAfter(/databases/$(database)/documents/rooms/$(roomId)/members/$(request.auth.uid)));
+
+        allow update: if false;
+        allow delete: if isAdmin() && isValidId(roomId) && isValidId(activityId);
+      }
+    }
+
+    // =========================================================
+    // 5. ROOM INVITE CODES (SINGLE-DOC LOOKUP ONLY, NO LIST SCRAPING)
+    // =========================================================
+    match /invites/{code} {
+      allow get: if isSignedIn() && isValidInviteCode(code);
+      allow list: if isSignedIn() && resource.data.createdBy == request.auth.uid;
+
+      allow create: if isVerified() &&
+        isValidInviteCode(code) &&
+        isValidInvite(incoming(), code) &&
+        incoming().createdBy == request.auth.uid &&
+        incoming().createdAt == request.time &&
+        isRoomMod(incoming().roomId);
+
+      allow update: if isVerified() &&
+        isValidInviteCode(code) &&
+        isValidInvite(incoming(), code) &&
+        incoming().code == existing().code &&
+        incoming().roomId == existing().roomId &&
+        incoming().createdBy == existing().createdBy &&
+        incoming().createdAt == existing().createdAt &&
+        (isAdmin() || isRoomMod(existing().roomId)) &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['active']);
+
+      allow delete: if isVerified() &&
+        isValidInviteCode(code) &&
+        (isAdmin() || isRoomMod(existing().roomId));
+    }
+
+    // =========================================================
+    // 6. IN-APP NOTIFICATIONS (RECIPIENT ISOLATED)
+    // =========================================================
+    match /notifications/{notificationId} {
+      allow get: if isSignedIn() && isValidId(notificationId) && (existing().recipientId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && resource.data.recipientId == request.auth.uid;
+
+      allow create: if isVerified() &&
+        isValidId(notificationId) &&
+        isValidNotification(incoming()) &&
+        incoming().senderId == request.auth.uid &&
+        incoming().read == false &&
+        incoming().createdAt == request.time;
+
+      allow update: if isVerified() &&
+        isValidId(notificationId) &&
+        isValidNotification(incoming()) &&
+        incoming().recipientId == existing().recipientId &&
+        incoming().senderId == existing().senderId &&
+        incoming().createdAt == existing().createdAt &&
+        (
+          isAdmin() ||
+          (existing().recipientId == request.auth.uid &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['read']))
+        );
+
+      allow delete: if isVerified() &&
+        isValidId(notificationId) &&
+        (existing().recipientId == request.auth.uid || isAdmin());
+    }
+
+    // =========================================================
+    // 7. GLOBAL ADMINS ROSTER
+    // =========================================================
+    match /admins/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if false;
+      allow create, update, delete: if isAdmin() && isValidId(userId);
+    }
+  }
+}

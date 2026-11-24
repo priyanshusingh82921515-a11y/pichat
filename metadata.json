@@ -1,0 +1,11 @@
+{
+  "name": "Quadline",
+  "description": "Real-time campus and club chat workspace with channels, direct messages, rich media, voice notes, polls, events, and room moderation.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
